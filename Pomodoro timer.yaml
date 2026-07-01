@@ -1,0 +1,86 @@
+pomodoro:
+  settings:
+    focus_duration: 25m
+    short_break_duration: 5m
+    long_break_duration: 15m
+    cycles_before_long_break: 4
+
+  state:
+    current_mode: FOCUS        # FOCUS | SHORT_BREAK | LONG_BREAK
+    time_remaining: 25m
+    focus_cycle_count: 0
+    running: false
+    paused: false
+
+  flow:
+    on_timer_end:
+      - condition: current_mode == FOCUS
+        actions:
+          - increment: focus_cycle_count
+          - condition: focus_cycle_count == 4
+            then:
+              - set: current_mode = LONG_BREAK
+              - set: time_remaining = long_break_duration
+              - set: focus_cycle_count = 0
+            else:
+              - set: current_mode = SHORT_BREAK
+              - set: time_remaining = short_break_duration
+
+      - condition: current_mode == SHORT_BREAK
+        actions:
+          - set: current_mode = FOCUS
+          - set: time_remaining = focus_duration
+
+      - condition: current_mode == LONG_BREAK
+        actions:
+          - set: current_mode = FOCUS
+          - set: time_remaining = focus_duration
+
+      - auto_start_next_timer: true
+
+  controls:
+    start_pause_button:
+      behavior:
+        - if: running == false
+          then:
+            - set: running = true
+            - set: paused = false
+            - label: "Pause"
+        - else:
+            - toggle: paused
+            - label:
+                if paused: "Start"
+                else: "Pause"
+
+    reset_button:
+      behavior:
+        - if: running == true OR paused == true
+          then:
+            - set: time_remaining = current_mode_duration
+            - set: running = false
+            - set: paused = false
+        - else:
+            - set: current_mode = FOCUS
+            - set: time_remaining = focus_duration
+            - set: focus_cycle_count = 0
+            - set: running = false
+            - set: paused = false
+
+  display:
+    timer:
+      type: analog_clock
+      properties:
+        progress_circle: true
+        digital_center: true
+        show_time_format: "MM:SS"
+
+    status:
+      show_when_paused: true
+      text: "Paused"
+      position: below_digital_timer
+
+    labels:
+      mode_label: true
+      cycle_counter:
+        label: "Focus cycles"
+        value: focus_cycle_count
