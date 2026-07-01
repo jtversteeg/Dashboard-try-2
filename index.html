@@ -5,11 +5,11 @@
 <title>Dashboard</title>
 
 <!-- ✅ YAML parser (MUST be included like this) -->
-https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
 
 <style>
   /* Ensure consistent sizing */
-  * {
+  * { 
     box-sizing: border-box;
   }
 
@@ -198,7 +198,7 @@ https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
   async function loadPomodoroYAML() {
     try {
       // ✅ Fetch YAML file (must exist in same folder)
-      const response = await fetch("Pomodoro timer.yaml");
+      const response = await fetch("pomodoro.yaml");
 
       // Check if file exists
       if (!response.ok) {
@@ -224,7 +224,7 @@ https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
       console.error(error);
 
       document.getElementById("panel3").innerHTML =
-        "<div style='padding:10px'>❌ Failed to load Pomodoro timer.yaml</div>";
+        "<div style='padding:10px'>❌ Failed to load Pomodoro timer</div>";
     }
   }
 
