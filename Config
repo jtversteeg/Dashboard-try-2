@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<!-- ✅ YAML parser (MUST be included like this) -->
+https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+
+<style>
+  /* Ensure consistent sizing */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: white;
+    font-family: Arial, sans-serif;
+  }
+
+  /* MAIN DASHBOARD CONTAINER */
+  .dashboard {
+    width: 1280px;
+    height: 400px;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  /* COLUMN LAYOUT */
+  .column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* PANEL STYLE */
+  .box {
+    background: #0078d4;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border-radius: 8px;
+  }
+
+  /* COLUMN 1 SPLIT */
+  .top-60 { flex: 6; }
+  .bottom-40 { flex: 4; }
+
+  /* FULL HEIGHT PANEL */
+  .full { flex: 1; }
+
+  /* ===== SLIDER (PANEL 4 / 5) ===== */
+  .slider {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .slides {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.4s ease-in-out;
+  }
+
+  .slide {
+    width: 50%;
+    background: #0078d4;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* DOT INDICATORS */
+  .dots {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    display: inline-block;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .dot.active {
+    background: white;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <!-- ✅ COLUMN 1 (60 / 40 SPLIT) -->
+  <div class="column">
+    <div class="box top-60">Panel 1</div>
+    <div class="box bottom-40">Panel 2</div>
+  </div>
+
+  <!-- ✅ COLUMN 2 (YAML LOADER) -->
+  <div class="column">
+    <div class="box full" id="panel3">
+      Loading Pomodoro timer...
+    </div>
+  </div>
+
+  <!-- ✅ COLUMN 3 (SWIPE SLIDER) -->
+  <div class="column">
+    <div class="slider" id="slider">
+
+      <!-- Slides -->
+      <div class="slides">
+        <div class="slide">Panel 4</div>
+        <div class="slide">Panel 5</div>
+      </div>
+
+      <!-- Indicator dots -->
+      <div class="dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- ✅ JAVASCRIPT SECTION -->
+<!-- ========================= -->
+
+<script>
+  /* =========================
+     ✅ SLIDER LOGIC
+  ========================= */
+
+  const slider = document.getElementById("slider");
+  const slides = slider.querySelector(".slides");
+  const dots = slider.querySelectorAll(".dot");
+
+  let index = 0;
+  let startX = 0;
+  let endX = 0;
+
+  function updateSlider() {
+    slides.style.transform = `translateX(-${index * 50}%)`;
+
+    // Update indicator dots
+    dots.forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+    });
+  }
+
+  function handleSwipe() {
+    if (startX - endX > 50) index = 1; // swipe left
+    if (endX - startX > 50) index = 0; // swipe right
+    updateSlider();
+  }
+
+  /* Touch events */
+  slider.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
+
+  slider.addEventListener("touchend", e => {
+    endX = e.changedTouches[0].clientX;
+    handleSwipe();
+  });
+
+  /* Mouse events */
+  slider.addEventListener("mousedown", e => {
+    startX = e.clientX;
+  });
+
+  slider.addEventListener("mouseup", e => {
+    endX = e.clientX;
+    handleSwipe();
+  });
+
+  /* =========================
+     ✅ YAML LOADING (PANEL 3)
+  ========================= */
+
+  async function loadPomodoroYAML() {
+    try {
+      // ✅ Fetch YAML file (must exist in same folder)
+      const response = await fetch("Pomodoro timer.yaml");
+
+      // Check if file exists
+      if (!response.ok) {
+        throw new Error("File not found");
+      }
+
+      const text = await response.text();
+
+      // ✅ Parse YAML
+      const data = jsyaml.load(text);
+
+      // ✅ Render nicely
+      const html = `
+        <div style="text-align:left; padding:10px; width:100%; font-size:14px;">
+          <strong>Pomodoro Timer</strong>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        </div>
+      `;
+
+      document.getElementById("panel3").innerHTML = html;
+
+    } catch (error) {
+      console.error(error);
+
+      document.getElementById("panel3").innerHTML =
+        "<div style='padding:10px'>❌ Failed to load Pomodoro timer.yaml</div>";
+    }
+  }
+
+  // ✅ Load YAML on startup
+  loadPomodoroYAML();
+
+</script>
+
+</body>
+</html>
